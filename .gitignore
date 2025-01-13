@@ -1,0 +1,7 @@
+.vscode/
+.cache/
+build/
+bin/
+*/gen
+
+*.o
