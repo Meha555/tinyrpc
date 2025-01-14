@@ -1,6 +1,6 @@
 # tinyrpc
 
-# 项目概述
+## 项目概述
 
 Linux 环境下基于 muduo、Protobuf 和 Zookeeper 实现的一个轻量级 RPC 框架。可以把单体架构系统的本地方法调用，重构成基于 TCP 网络通信的 RPC 远程方法调用，实现统一台机器不同进程或者不同机器之间的服务调用。
 
@@ -11,22 +11,26 @@ Linux 环境下基于 muduo、Protobuf 和 Zookeeper 实现的一个轻量级 RP
 
 ## example
 
-进入到example目录下，运行./server和./client，即可完成服务发布和调用。
+进入到example目录下，运行server和client，即可完成服务发布和调用。
 
 ```shell
-./server -i ../example/test.conf
-./client -i ../example/test.conf
+cd server
+./userservice -i ../../example/callee/userservice.conf
+./contactservice -i ../../example/callee/contactservice.conf
+cd client
+./client -i ../../example/caller/client.conf
 ```
 
 ## 库准备
 
-1. Muduo 库的安装
+1. Muduo 库
+
 Muduo 是一个基于多线程 Epoll 模式的高效网络库，负责数据流的网络通信。
 安装教程参考：[Mudo安装](https://blog.csdn.net/QIANGWEIYUAN/article/details/89023980)
 
-2. Zookeeper 的安装
+2. Zookeeper
 Zookeeper 负责服务注册与发现，动态记录服务的 IP 地址及端口号，以便调用端快速找到目标服务。
-安装步骤：
+
 安装 Zookeeper：
 ```shell
 sudo apt install zookeeperd
@@ -36,17 +40,17 @@ sudo apt install zookeeperd
 sudo apt install libzookeeper-mt-dev
 ```
 
-3. Protobuf 的安装
+3. Protobuf
 Protobuf 负责 RPC 方法的注册、数据的序列化与反序列化。
-相较于 XML 和 JSON，Protobuf 是二进制存储，效率更高。
-本地版本：3.12.4
-在 Ubuntu 22 上可以直接安装：
+
 ```shell
 sudo apt-get install protobuf-compiler libprotobuf-dev
 ```
 
 4. Glog 日志库的安装
-Glog 是一个高效的异步日志库，用于记录框架运行时的调试与错误日志。
+
+一个简单高效的异步日志库，用于记录框架运行时的调试与错误日志。
+
 ```shell
 sudo apt-get install libgoogle-glog-dev libgflags-dev
 ```
@@ -60,8 +64,6 @@ sudo apt-get install libgoogle-glog-dev libgflags-dev
 - **Zookeeper**：负责分布式环境的服务注册，记录服务所在的IP地址以及端口号，可动态地为调用端提供目标服务所在发布端的IP地址与端口号，方便服务所在IP地址变动的及时更新。
 
 - **TCP沾包问题处理**：定义服务发布端和调用端之间的消息传输格式，记录方法名和参数长度，防止沾包。
-
-- **Glog日志库**：后续增加了Glog的日志库，进行异步的日志记录。
 
 ## 性能测试
 
