@@ -9,6 +9,15 @@ Linux 环境下基于 muduo、Protobuf 和 Zookeeper 实现的一个轻量级 RP
 - 基于 ZooKeeper 分布式协调服务中间件提供服务注册和服务发现功能。
 - 设计了基于 TCP 传输的二进制协议，解决粘包问题，且能够高效传输服务名、方法名以及参数。
 
+## example
+
+进入到example目录下，运行./server和./client，即可完成服务发布和调用。
+
+```shell
+./server -i ../example/test.conf
+./client -i ../example/test.conf
+```
+
 ## 库准备
 
 1. Muduo 库的安装

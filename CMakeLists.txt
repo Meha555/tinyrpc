@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(CMAKE_EXPORT_COMPILE_COMMANDS "for LSP" ON)
 
-set(BUILD_TESTING ON)
 set(BUILD_EXAMPLE ON)
 
 #查找porotbuf包
@@ -19,4 +18,6 @@ endif()
 
 #添加子目录
 add_subdirectory(src)
-add_subdirectory(example)
+if (BUILD_EXAMPLE)
+    add_subdirectory(example)
+endif()

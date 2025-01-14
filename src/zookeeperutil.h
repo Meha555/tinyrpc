@@ -33,7 +33,7 @@ public:
     // zkclient启动连接zkserver
     void Start(uint64_t recv_timeout_ms = 10000);
     // 在zkserver中根据指定的path创建一个节点
-    void CreateNode(const char *path, const char *data, int datalen, CreateMode mode = Persistent);
+    void CreateNode(const std::string &path, const std::string &data, CreateMode mode = Persistent);
     // 根据参数指定的znode节点路径获取znode节点值
     std::optional<std::string> GetNodeData(const std::string &path);
 

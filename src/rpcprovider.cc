@@ -8,6 +8,15 @@
 
 using namespace meha;
 
+RpcProvider::RpcProvider(const std::string &package)
+{
+    ZkClient zkclient;
+    zkclient.Start();
+    std::string toplevel = "/" + package;
+    zkclient.CreateNode(toplevel.c_str(), "", ZkClient::CreateMode::Persistent);
+    LOG(INFO) << "zk create " << toplevel << " as toplevel node";
+}
+
 /// 这个函数用于注册服务对象和其对应的 RPC 方法，以便服务端处理客户端的请求。
 /// 参数类型设置为 google::protobuf::Service，是因为所有由 protobuf 生成的服务类
 /// 都继承自 google::protobuf::Service，这样我们可以通过基类指针指向子类对象，实现动态多态。
@@ -65,13 +74,13 @@ void RpcProvider::Run()
     zkclient.Start();
     // service_name为永久节点，method_name为临时节点
     for (auto &sp : m_service_map) {
-        // service_name 在zk中的目录下是"/"+service_name
-        std::string service_path = "/" + sp.first;
-        zkclient.CreateNode(service_path.c_str(), nullptr, 0, ZkClient::CreateMode::Persistent);
+        // service_name 在zk中的目录下是"/meha/service_name"
+        std::string service_path = "/meha/" + sp.first;
+        zkclient.CreateNode(service_path, "", ZkClient::CreateMode::Persistent);
         for (auto &mp : sp.second.method_map) {
             std::string method_path = service_path + "/" + mp.first;
             std::string method_path_data = ip + ":" + port;
-            zkclient.CreateNode(method_path.c_str(), method_path_data.c_str(), method_path_data.size(), ZkClient::CreateMode::Ephemeral);
+            zkclient.CreateNode(method_path, method_path_data, ZkClient::CreateMode::Ephemeral);
         }
     }
     // rpc服务端准备启动，打印信息
@@ -134,13 +143,13 @@ void RpcProvider::onMessage(const muduo::net::TcpConnectionPtr &conn, muduo::net
         return;
     }
     // 打印调试信息
-    LOG(INFO) << "============================================";
-    LOG(INFO) << "header_size: " << header_size;
-    LOG(INFO) << "rpc_header_str: " << rpc_header_str;
-    LOG(INFO) << "service_name: " << service_name;
-    LOG(INFO) << "method_name: " << method_name;
-    LOG(INFO) << "args_str: " << args_str;
-    LOG(INFO) << "============================================";
+    // LOG(INFO) << "============================================";
+    // LOG(INFO) << "header_size: " << header_size;
+    // LOG(INFO) << "rpc_header_str: " << rpc_header_str;
+    // LOG(INFO) << "service_name: " << service_name;
+    // LOG(INFO) << "method_name: " << method_name;
+    // LOG(INFO) << "args_str: " << args_str;
+    // LOG(INFO) << "============================================";
 
     // 获取service对象和method对象
     auto it = m_service_map.find(service_name);
@@ -192,6 +201,7 @@ void RpcProvider::sendRpcResponse(const muduo::net::TcpConnectionPtr &conn, goog
     }
     // conn->shutdown(); // TODO 模拟http短链接，由rpcprovider主动断开连接
 }
+
 RpcProvider::~RpcProvider()
 {
     m_event_loop.quit();

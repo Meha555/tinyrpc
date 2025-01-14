@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package example;
+
+import "resultcode.proto";
+option cc_generic_services = true;
+
+message LoginRequest {
+    bytes name = 1;
+    bytes passwd = 2;
+}
+
+message LoginResponse {
+    ResultCode result = 1;
+    bool uid = 2;
+}
+
+message LogoutRequest {
+    uint32 uid = 1;
+}
+
+message LogoutResponse {
+    ResultCode result = 1;
+    bool uid = 2;
+}
+
+message IsUserOnlineRequest {
+    uint32 uid = 1;
+}
+
+message IsUserOnlineResponse {
+    bool isOnline = 1;
+}
+
+message HasUserRequest {
+    uint32 uid = 1;
+}
+
+message HasUserResponse {
+    bool hasUser = 1;
+}
+
+service UserServiceRpc {
+    rpc Login(LoginRequest) returns (LoginResponse);
+    rpc Logout(LogoutRequest) returns (LogoutResponse);
+    rpc IsUserOnline(IsUserOnlineRequest) returns (IsUserOnlineResponse);
+    rpc HasUser(HasUserRequest) returns (HasUserResponse);
+}

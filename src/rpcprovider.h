@@ -18,9 +18,11 @@ namespace meha
 class RpcProvider
 {
 public:
+    explicit RpcProvider(const std::string &package);
+    ~RpcProvider();
+
     // 发布一个RPC服务
     void RegisterService(google::protobuf::Service *service);
-    ~RpcProvider();
     // 启动RPC服务节点，开始提供RPC服务
     void Run();
 
@@ -38,7 +40,7 @@ private:
     // RPCClosure的回调操作，用于序列化rpc的响应和网络发送
     void sendRpcResponse(const muduo::net::TcpConnectionPtr &conn, google::protobuf::Message *response);
 
-    // @brief 该服务对象需要提交到注册中心的注册表项
+    /// @brief 该服务对象需要提交到注册中心的注册表项
     struct ServiceInfo
     {
         // 服务对象

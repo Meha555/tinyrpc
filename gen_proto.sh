@@ -29,6 +29,8 @@ clean_generated_files() {
 # 添加命令行参数解析
 if [ "$1" == "clean" ]; then
     clean_generated_files src/gen
+    clean_generated_files example/gen
 else
     generate_proto src/proto src/gen
+    generate_proto example/proto example/gen
 fi

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package example;
+
+import "resultcode.proto";
+option cc_generic_services = true;
+
+message GetContactListRequest
+{
+    uint32 uid = 1;
+}
+
+message GetContactListResponse
+{
+    ResultCode result = 1;
+    repeated bytes contacts = 2;
+}
+
+service ContactServiceRpc
+{
+    rpc GetContactList(GetContactListRequest) returns(GetContactListResponse);
+}

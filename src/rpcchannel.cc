@@ -69,13 +69,13 @@ void RpcChannel::CallMethod(const ::google::protobuf::MethodDescriptor *method,
     }
     send_rpc_str += args_str;
     //  打印调试信息
-    LOG(INFO) << "============================================";
-    LOG(INFO) << "header_size: " << header_str.size();
-    LOG(INFO) << "rpc_header_str: " << header_str;
-    LOG(INFO) << "service_name: " << m_service_name;
-    LOG(INFO) << "method_name: " << m_method_name;
-    LOG(INFO) << "args_str: " << args_str;
-    LOG(INFO) << "============================================";
+    // LOG(INFO) << "============================================";
+    // LOG(INFO) << "header_size: " << header_str.size();
+    // LOG(INFO) << "rpc_header_str: " << header_str;
+    // LOG(INFO) << "service_name: " << m_service_name;
+    // LOG(INFO) << "method_name: " << m_method_name;
+    // LOG(INFO) << "args_str: " << args_str;
+    // LOG(INFO) << "============================================";
 
     // 发送rpc的请求
     if (-1 == send(m_clientfd, send_rpc_str.c_str(), send_rpc_str.size(), 0)) {
@@ -126,7 +126,7 @@ bool RpcChannel::ConnectTo(const std::string &ip, uint16_t port)
 
 std::optional<std::pair<std::string, uint16_t>> RpcChannel::QueryServiceHost(ZkClient *zkclient, std::string service_name, std::string method_name)
 {
-    std::string method_path = "/" + service_name + "/" + method_name;
+    std::string method_path = "/meha/" + service_name + "/" + method_name;
     LOG(INFO) << "method_path: " << method_path;
     auto host_data = zkclient->GetNodeData(method_path);
     if (!host_data) {

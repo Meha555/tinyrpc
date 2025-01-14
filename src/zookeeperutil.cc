@@ -48,20 +48,20 @@ void ZkClient::Start(uint64_t recv_timeout_ms)
     LOG(INFO) << "zookeeper_init success";
 }
 
-void ZkClient::CreateNode(const char *path, const char *data, int datalen, CreateMode mode)
+void ZkClient::CreateNode(const std::string &path, const std::string &data, CreateMode mode)
 {
     // 创建znode节点，可以选择永久性节点还是临时节点。
     char path_buffer[128];
     int bufferlen = sizeof(path_buffer);
-    int flag = zoo_exists(m_zhandle, path, 0, nullptr);
+    int flag = zoo_exists(m_zhandle, path.c_str(), 0, nullptr);
     if (flag == ZNONODE) { // 表示节点不存在
         // 创建指定的path的znode节点
-        flag = zoo_create(m_zhandle, path, data, datalen, &ZOO_OPEN_ACL_UNSAFE, mode, path_buffer, bufferlen);
+        flag = zoo_create(m_zhandle, path.c_str(), data.c_str(), data.size(), &ZOO_OPEN_ACL_UNSAFE, mode, path_buffer, bufferlen);
         if (flag == ZOK) {
             LOG(INFO) << "znode create success... path:" << path;
             return;
         } else {
-            LOG(ERROR) << "znode create success... path:" << path;
+            LOG(ERROR) << "znode create failed... path:" << path;
             exit(EXIT_FAILURE);
         }
     }
