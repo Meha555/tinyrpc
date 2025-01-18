@@ -147,7 +147,7 @@ int main(int argc, char **argv)
     // 调用框架的初始化操作
     RpcConfig::InitEnv(argc, argv);
 
-    // provider是一个rpc网络服务对象。把UserService对象发布到rpc节点上
+    // provider是一个rpc网络服务对象。把UserService和EchoService对象都发布到rpc节点127.0.0.1:8000上
     RpcProvider provider("meha");
     provider.RegisterService(std::make_unique<UserService>());
     provider.RegisterService(std::make_unique<EchoService>());

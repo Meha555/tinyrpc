@@ -8,6 +8,7 @@
 #include <muduo/net/TcpServer.h>
 #include <string>
 #include <unordered_map>
+#include "rwlock.h"
 
 namespace meha
 {
@@ -23,6 +24,7 @@ public:
 
     // 发布一个RPC服务
     void RegisterService(std::unique_ptr<google::protobuf::Service> service);
+    void UnregisterService(const std::string &service_name);
     // 启动RPC服务节点，开始提供RPC服务
     void Run();
 
@@ -51,6 +53,7 @@ private:
     };
     std::unordered_map<std::string, ServiceInfo> m_service_map; // 保存服务对象和服务方法
     muduo::net::EventLoop m_event_loop;
+    RWLock m_rwlock;
 };
 
 }

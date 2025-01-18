@@ -41,7 +41,7 @@ private:
      */
     std::optional<std::pair<std::string, uint16_t>> QueryServiceHost(ZkClient *zkclient, std::string service_name, std::string method_name);
     /**
-     * @brief 连接到RPC方法的服务提供者
+     * @brief 连接到RpcProvider
      * @param ip
      * @param port
      * @return true

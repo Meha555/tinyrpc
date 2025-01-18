@@ -63,6 +63,7 @@ int main(int argc, char **argv)
     RpcConfig::InitEnv(argc, argv);
 
     RpcProvider provider("meha");
+    // provider是一个rpc网络服务对象。把ContactService对象发布到rpc节点127.0.0.1:8001上
     provider.RegisterService(std::make_unique<ContactService>());
 
     provider.Run();

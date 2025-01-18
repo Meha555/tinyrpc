@@ -1,0 +1,25 @@
+@startuml RPC调用过程
+autonumber
+autoactivate on
+
+actor User
+participant EchoService_Stub
+participant RpcChannel
+participant ZooKeeper
+participant RpcProvider
+participant EchoService
+
+User -> EchoService_Stub : Echo(request)
+EchoService_Stub -> RpcChannel : CallMethod(idx, request)
+RpcChannel -> ZooKeeper : 1. 查找服务地址
+return
+RpcChannel -> RpcChannel : 2. 封装RpcHeader
+return
+RpcChannel -> RpcProvider : 3. 发送请求到服务地址
+RpcProvider -> EchoService : 解析RpcHeader，调用其中指定的服务方法
+return
+return
+return
+return
+
+@enduml

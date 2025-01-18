@@ -4,7 +4,6 @@
 #include "tinyrpcheader.pb.h"
 #include "zookeeperutil.h"
 #include <glog/logging.h>
-#include <iostream>
 
 using namespace meha;
 
@@ -47,7 +46,19 @@ void RpcProvider::RegisterService(std::unique_ptr<google::protobuf::Service> ser
         service_info.method_map.emplace(method_name, pmd);
     }
     service_info.service = std::move(service);
+    m_rwlock.WriteLock();
     m_service_map.emplace(service_name, std::move(service_info));
+    m_rwlock.Unlock();
+}
+
+void RpcProvider::UnregisterService(const std::string &service_name)
+{
+    // 就是这里没有实现注册多个相同服务（比如同一个服务部署在多台机器上），所以直接删掉就可以
+    m_rwlock.WriteLock();
+    m_service_map.erase(service_name);
+    LOG(WARNING) << "service_name=" << service_name << " unregistered";
+    m_rwlock.Unlock();
+    // 不用到zookeeper上删除节点，因为创建的是临时节点，服务下线时会断开连接，从而自动删除
 }
 
 void RpcProvider::Run()
@@ -72,7 +83,8 @@ void RpcProvider::Run()
     // 把当前rpc节点上要发布的服务全部注册到zk上面，让rpc client客户端可以在zk上发现服务
     ZkClient zkclient;
     zkclient.Start();
-    // service_name为永久节点，method_name为临时节点
+    m_rwlock.ReadLock();
+    // service_name为永久节点(因为可能很多个该服务的实例），method_name为临时节点(因为每个method节点对应一个该服务的实例)
     for (auto &sp : m_service_map) {
         // service_name 在zk中的目录下是"/meha/service_name"
         std::string service_path = "/meha/" + sp.first;
@@ -80,9 +92,11 @@ void RpcProvider::Run()
         for (auto &mp : sp.second.method_map) {
             std::string method_path = service_path + "/" + mp.first;
             std::string method_path_data = ip + ":" + port;
-            zkclient.CreateNode(method_path, method_path_data, ZkClient::CreateMode::Ephemeral);
+            zkclient.CreateNode(method_path, method_path_data, ZkClient::CreateMode::Ephemeral
+                                , std::bind(&RpcProvider::UnregisterService, this, std::placeholders::_1));
         }
     }
+    m_rwlock.Unlock();
     // rpc服务端准备启动，打印信息
     LOG(INFO) << "RpcProvider start service at ip:" << ip << " port:" << port;
     // 启动网络服务
@@ -104,6 +118,14 @@ void RpcProvider::onConnection(const muduo::net::TcpConnectionPtr &conn)
 
 void RpcProvider::onMessage(const muduo::net::TcpConnectionPtr &conn, muduo::net::Buffer *buffer, muduo::Timestamp receive_time)
 {
+    /* 1. 网络上接收的远程rpc调用请求的字符流    Login args  */
+    /* 2. 对收到的字符流反序列化  */
+    /* 3. 从反序列化的字符流中解析出service_name 和 method_name 和 args_str参数 */
+	/* 4. m_serviceMap是一个哈希表，我们之前将服务对象和方法对象保存在这个表里面，
+          根据service_name和method_name可以从m_serviceMap中找到服务对象service和方法对象描述符method。
+       5. 将args_str解码至request对象中
+    	  之后request对象就可以这样使用了：request.name() = "zhangsan"  |  request.pwd() = "123456"
+    */
     UNUSED(receive_time);
     LOG(INFO) << "call onMessage";
     // 网络上接收远程rpc调用请求的字符流
@@ -152,14 +174,18 @@ void RpcProvider::onMessage(const muduo::net::TcpConnectionPtr &conn, muduo::net
     // LOG(INFO) << "============================================";
 
     // 获取service对象和method对象
+    m_rwlock.ReadLock();
     auto it = m_service_map.find(service_name);
     if (it == m_service_map.end()) {
-        LOG(WARNING) << service_name << "is not exist!";
+        LOG(WARNING) << service_name << " is not exist!";
+        m_rwlock.Unlock();
         return;
     }
+    m_rwlock.Unlock();
+
     auto mit = it->second.method_map.find(method_name);
     if (mit == it->second.method_map.end()) {
-        LOG(WARNING) << service_name << "." << method_name << "is not exist!";
+        LOG(WARNING) << service_name << "." << method_name << " is not exist!";
         return;
     }
 
@@ -199,7 +225,7 @@ void RpcProvider::sendRpcResponse(const muduo::net::TcpConnectionPtr &conn, goog
     } else {
         LOG(ERROR) << "serialize error!";
     }
-    // conn->shutdown(); // TODO 模拟http短链接，由rpcprovider主动断开连接
+    // conn->shutdown(); // 模拟http短链接（毕竟是方法调用），由rpcprovider主动断开连接
 }
 
 RpcProvider::~RpcProvider()
