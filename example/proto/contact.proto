@@ -16,7 +16,7 @@ message GetContactListResponse
     repeated bytes contacts = 2;
 }
 
-service ContactServiceRpc
+service ContactService
 {
     rpc GetContactList(GetContactListRequest) returns(GetContactListResponse);
 }

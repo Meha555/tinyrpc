@@ -11,6 +11,18 @@ Linux 环境下基于 muduo、Protobuf 和 Zookeeper 实现的一个轻量级 RP
 
 ## example
 
+### 介绍
+
+在example目录下，分别有callee和caller两个目录，分别对应服务发布端和调用端。
+
+其中callee中，`EchoService` 和 `UserService` 是通过 `RpcProvider` 发布在同一个节点 `127.0.0.1:8000` 上的；而 `ContactService` 是发布在另一个节点 `127.0.0.1:8001` 上的。
+
+两者共同说明了服务是可以分布式部署的，同一个 `RpcProvider` 发布的服务会共用同一个节点。且除了客户端和服务端之间可以调用，服务端之间也可以调用。
+
+### 运行方法
+
+启动zookeeper，可使用docker：`docker run --name zk1 -p 2181:2181 -it zookeeper bash`
+
 进入到example目录下，运行server和client，即可完成服务发布和调用。
 
 ```shell
@@ -20,6 +32,8 @@ cd server
 cd client
 ./client -i ../../example/caller/client.conf
 ```
+
+![](example/example.png)
 
 ## 库准备
 
@@ -65,6 +79,8 @@ sudo apt-get install libgoogle-glog-dev libgflags-dev
 
 - **TCP沾包问题处理**：定义服务发布端和调用端之间的消息传输格式，记录方法名和参数长度，防止沾包。
 
-## 性能测试
+## TODO
 
-TODO
+- [ ] 性能测试
+- [ ] 利用muduo库替换rpcchannel::callmethod中的send/recv
+- [ ] 实现正确的rpccontroller

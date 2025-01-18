@@ -40,7 +40,7 @@ message HasUserResponse {
     bool hasUser = 1;
 }
 
-service UserServiceRpc {
+service UserService {
     rpc Login(LoginRequest) returns (LoginResponse);
     rpc Logout(LogoutRequest) returns (LogoutResponse);
     rpc IsUserOnline(IsUserOnlineRequest) returns (IsUserOnlineResponse);

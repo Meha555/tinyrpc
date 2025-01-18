@@ -1,4 +1,5 @@
 #include "contact.pb.h"
+#include "echo.pb.h"
 #include "rpcchannel.h"
 #include "rpcconfig.h"
 #include "rpccontroller.h"
@@ -7,32 +8,47 @@
 
 using namespace meha;
 
-int main(int argc, char **argv)
-{
-    RpcConfig::InitEnv(argc, argv);
-    RpcController controller;
+RpcController controller;
 
-    example::UserServiceRpc_Stub user_stub(new RpcChannel);
+void test_client_call_service()
+{
+    LOG(WARNING) << "========= " << __PRETTY_FUNCTION__ << " =========";
+
+    example::EchoService_Stub echo_stub(new RpcChannel, ::google::protobuf::Service::ChannelOwnership::STUB_OWNS_CHANNEL);
+    example::EchoRequest req;
+    req.set_message("HelloWorld!");
+    example::EchoResponse rsp;
+    echo_stub.Echo(&controller, &req, &rsp, nullptr);
+    if (controller.Failed()) {
+        LOG(ERROR) << controller.ErrorText();
+        exit(EXIT_FAILURE);
+    }
+    LOG(INFO) << "echo: " << rsp.message();
+}
+
+void test_service_call_another_service()
+{
+    LOG(WARNING) << "========= " << __PRETTY_FUNCTION__ << " =========";
+
+    example::UserService_Stub user_stub(new RpcChannel, ::google::protobuf::Service::ChannelOwnership::STUB_OWNS_CHANNEL);
 
     example::LoginRequest req;
     req.set_name("zhangsan");
     req.set_passwd("123456");
     example::LoginResponse rsp;
     user_stub.Login(&controller, &req, &rsp, nullptr);
-    if (controller.Failed())
-    {
+    if (controller.Failed()) {
         LOG(ERROR) << controller.ErrorText();
         exit(EXIT_FAILURE);
     }
 
-    example::ContactServiceRpc_Stub contact_stub(new RpcChannel);
+    example::ContactService_Stub contact_stub(new RpcChannel, ::google::protobuf::Service::ChannelOwnership::STUB_OWNS_CHANNEL);
 
     example::GetContactListRequest req2;
     req2.set_uid(rsp.uid());
     example::GetContactListResponse rsp2;
     contact_stub.GetContactList(&controller, &req2, &rsp2, nullptr);
-    if (controller.Failed())
-    {
+    if (controller.Failed()) {
         LOG(ERROR) << controller.ErrorText();
         exit(EXIT_FAILURE);
     }
@@ -42,10 +58,18 @@ int main(int argc, char **argv)
         exit(EXIT_SUCCESS);
     }
 
-    LOG(INFO) << "user " << "zhangsan" << "'s contacts:";
-    for (auto& contact : rsp2.contacts()) {
+    LOG(INFO) << "user "
+              << "zhangsan"
+              << "'s contacts:";
+    for (auto &contact : rsp2.contacts()) {
         LOG(INFO) << "contact :" << contact;
     }
+}
 
+int main(int argc, char **argv)
+{
+    RpcConfig::InitEnv(argc, argv);
+    test_client_call_service();
+    test_service_call_another_service();
     return 0;
 }

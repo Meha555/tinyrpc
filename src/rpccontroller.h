@@ -19,7 +19,6 @@ public:
     std::string ErrorText() const override;
     void SetFailed(const std::string &reason) override;
 
-    // TODO 目前未实现具体的功能
     void StartCancel() override;
     bool IsCanceled() const override;
     void NotifyOnCancel(google::protobuf::Closure *callback) override;
@@ -28,6 +27,7 @@ private:
     bool m_failed; // RPC方法执行过程中的状态
     bool m_canceled;
     std::string m_errText; // RPC方法执行过程中的错误信息
+    google::protobuf::Closure *m_callback;
 };
 
 }

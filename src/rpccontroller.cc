@@ -5,6 +5,8 @@ using namespace meha;
 RpcController::RpcController()
     : m_failed(false)
     , m_canceled(false)
+    , m_errText("RPC error occurred: ")
+    , m_callback(nullptr)
 {
 }
 
@@ -28,12 +30,16 @@ std::string RpcController::ErrorText() const
 void RpcController::SetFailed(const std::string &reason)
 {
     m_failed = true;
-    m_errText = reason;
+    m_errText += reason;
 }
 
 void RpcController::StartCancel()
 {
     m_canceled = true;
+    if (m_callback) {
+        m_callback->Run();
+    }
+    m_canceled = false;
 }
 
 bool RpcController::IsCanceled() const
@@ -43,5 +49,9 @@ bool RpcController::IsCanceled() const
 
 void RpcController::NotifyOnCancel(google::protobuf::Closure *callback)
 {
-    assert(m_canceled);
+    if(!m_canceled) {
+        return;
+    }
+    m_callback = callback;
+    callback->Run();
 }

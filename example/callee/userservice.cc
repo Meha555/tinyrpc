@@ -1,14 +1,12 @@
-#include "user.pb.h"
-#include "rpcconfig.h"
-#include "rpcprovider.h"
+#include <string>
 #include <glog/logging.h>
 #include <google/protobuf/service.h>
-#include <string>
+#include "rpcconfig.h"
+#include "rpcprovider.h"
+#include "user.pb.h"
+#include "echo.pb.h"
 
-/**
- * @brief RPC服务UserService提供者
- */
-class UserService : public example::UserServiceRpc
+class UserService : public example::UserService
 {
 public: // RPC远端方法回调
     void Login(::google::protobuf::RpcController *controller
@@ -128,6 +126,21 @@ private:
     std::map<std::string, std::string> m_user_map;
 };
 
+class EchoService : public example::EchoService
+{
+public:
+    void Echo(::google::protobuf::RpcController *controller
+    , const ::example::EchoRequest *request
+    , ::example::EchoResponse *response
+    , ::google::protobuf::Closure *done) override
+    {
+        std::string msg = request->message();
+        LOG(INFO) << "doing local service: Echo";
+        response->set_message(msg);
+        done->Run();
+    }
+};
+
 int main(int argc, char **argv)
 {
     using namespace meha;
@@ -136,7 +149,8 @@ int main(int argc, char **argv)
 
     // provider是一个rpc网络服务对象。把UserService对象发布到rpc节点上
     RpcProvider provider("meha");
-    provider.RegisterService(new UserService());
+    provider.RegisterService(std::make_unique<UserService>());
+    provider.RegisterService(std::make_unique<EchoService>());
 
     // 启动一个rpc服务发布节点 Run以后，进程进入阻塞状态，等待远程的rpc调用请求
     provider.Run();

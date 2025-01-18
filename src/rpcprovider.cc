@@ -20,7 +20,7 @@ RpcProvider::RpcProvider(const std::string &package)
 /// 这个函数用于注册服务对象和其对应的 RPC 方法，以便服务端处理客户端的请求。
 /// 参数类型设置为 google::protobuf::Service，是因为所有由 protobuf 生成的服务类
 /// 都继承自 google::protobuf::Service，这样我们可以通过基类指针指向子类对象，实现动态多态。
-void RpcProvider::RegisterService(google::protobuf::Service *service)
+void RpcProvider::RegisterService(std::unique_ptr<google::protobuf::Service> service)
 {
     // 服务端需要知道对方想要调用的具体服务对象和方法，所以服务端需要维护一张表来存储方法名和服务对象之间的关系
     // 这些信息会保存在一个数据结构（ServiceInfo）中。
@@ -46,8 +46,8 @@ void RpcProvider::RegisterService(google::protobuf::Service *service)
         LOG(INFO) << "method_name=" << method_name;
         service_info.method_map.emplace(method_name, pmd);
     }
-    service_info.service = service;
-    m_service_map.emplace(service_name, service_info);
+    service_info.service = std::move(service);
+    m_service_map.emplace(service_name, std::move(service_info));
 }
 
 void RpcProvider::Run()
@@ -165,7 +165,7 @@ void RpcProvider::onMessage(const muduo::net::TcpConnectionPtr &conn, muduo::net
 
     // 此时说明服务和方法都在，可以执行了
 
-    google::protobuf::Service *service = it->second.service; // 获取服务对象
+    google::protobuf::Service * const service = it->second.service.get(); // 获取服务对象
     const google::protobuf::MethodDescriptor *method = mit->second; // 获取方法对象
 
     // 生成rpc方法调用请求的request和响应的response参数。Login函数需要这两个参数
@@ -177,7 +177,7 @@ void RpcProvider::onMessage(const muduo::net::TcpConnectionPtr &conn, muduo::net
 
     google::protobuf::Message *response = service->GetResponsePrototype(method).New(); // 同理获取请求消息对象
 
-    // 给下面的mehod方法的调用绑定一个Closure的回调函数
+    // 给下面的mehod方法的调用绑定一个回调函数，当服务的方法调用完成后，这个回调函数会被调用
     /***
     template <typename Class, typename Arg1, typename Arg2>
     inline Closure* NewCallback(Class* object, void (Class::*method)(Arg1, Arg2), Arg1 arg1, Arg2 arg2) { // void (Class::*)(Arg1, Arg2) 成员函数指针类型

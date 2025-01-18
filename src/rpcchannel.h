@@ -19,11 +19,11 @@ public:
      * @brief 客户端通过Stub对象调用RPC方法的回调。
      * 所有通过stub代理对象调用的rpc方法，都在调用这里，做RPC方法调用的参数序列化和网络传输
      * header_size + header_str(service_name method_name args_size) + args_str
-     * @param method
-     * @param controller
-     * @param request
-     * @param response
-     * @param done
+     * @param method：指向 MethodDescriptor 对象的指针，其中包含 RPC 方法的名称和其他信息。
+     * @param controller: 指向 RpcController 对象的指针，用于控制 RPC 的行为。
+     * @param request: 指向 HelloRequest 对象的指针，其中包含 RPC 方法的请求参数。
+     * @param response: 指向 HelloReply 对象的指针，应在其中设置 RPC 方法的响应结果。
+     * @param done: 指向 Closure 对象的指针，表示 RPC 方法完成后应执行的操作。
      */
     void CallMethod(const ::google::protobuf::MethodDescriptor *method,
                     ::google::protobuf::RpcController *controller,

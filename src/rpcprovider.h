@@ -22,7 +22,7 @@ public:
     ~RpcProvider();
 
     // 发布一个RPC服务
-    void RegisterService(google::protobuf::Service *service);
+    void RegisterService(std::unique_ptr<google::protobuf::Service> service);
     // 启动RPC服务节点，开始提供RPC服务
     void Run();
 
@@ -41,10 +41,11 @@ private:
     void sendRpcResponse(const muduo::net::TcpConnectionPtr &conn, google::protobuf::Message *response);
 
     /// @brief 该服务对象需要提交到注册中心的注册表项
+    /// @note 由于含有std::unique_ptr，所以该类不能拷贝
     struct ServiceInfo
     {
         // 服务对象
-        google::protobuf::Service *service;
+        std::unique_ptr<google::protobuf::Service> service;
         // 服务方法
         std::unordered_map<std::string, const google::protobuf::MethodDescriptor *> method_map;
     };

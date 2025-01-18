@@ -77,6 +77,14 @@ void RpcChannel::CallMethod(const ::google::protobuf::MethodDescriptor *method,
     // LOG(INFO) << "args_str: " << args_str;
     // LOG(INFO) << "============================================";
 
+    // 设置一个取消点来检查用户是否取消了该RPC调用
+    if (controller->IsCanceled()) {
+        LOG(INFO) << "canceled before RPC request sent";
+        controller->StartCancel();
+        // RPC调用前，应当取消RPC调用
+        return;
+    }
+
     // 发送rpc的请求
     if (-1 == send(m_clientfd, send_rpc_str.c_str(), send_rpc_str.size(), 0)) {
         close(m_clientfd);
@@ -85,7 +93,17 @@ void RpcChannel::CallMethod(const ::google::protobuf::MethodDescriptor *method,
         controller->SetFailed(std::format("send request error: {}", errtxt));
         return;
     }
-    // 接收rpc请求的响应值 // TODO 这里改成支持异步api
+
+    // 设置一个取消点来检查用户是否取消了该RPC调用
+    if (controller->IsCanceled()) {
+        LOG(INFO) << "canceled after RPC request sent";
+        controller->StartCancel();
+        // RPC调用前，应当取消RPC调用
+        return;
+    }
+
+    // 接收rpc请求的响应值 // TODO 这里无法改成支持像wayland那样的异步api，因为这里必须填写response
+                        // 但是应该可以从done这个类似wl_callback这样的来实现异步
     char recv_buf[1024] = {0};
     int recv_size = 0;
     if (-1 == (recv_size = recv(m_clientfd, recv_buf, sizeof(recv_buf), 0))) {
@@ -95,12 +113,16 @@ void RpcChannel::CallMethod(const ::google::protobuf::MethodDescriptor *method,
         return;
     }
     // 反序列化rpc调用响应数据
-    if (!response->ParseFromArray(recv_buf, recv_size)) { // TODO 为什么这里用ParseFromArray
+    if (!response->ParseFromArray(recv_buf, recv_size)) {
         close(m_clientfd);
         char errtxt[512] = {};
         LOG(INFO) << "parse retval error" << strerror_r(errno, errtxt, sizeof(errtxt));
         controller->SetFailed(std::format("parse retval error: {}", errtxt));
         return;
+    }
+    // 执行RPC完成回调
+    if (done) {
+        done->Run();
     }
 }
 

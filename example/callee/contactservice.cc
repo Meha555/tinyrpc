@@ -14,7 +14,7 @@ static std::map<uint32_t, std::vector<std::string>> g_contact_list = {
     {3, {"zhangwu", "zhangliu", "zhangqi"}},
 };
 
-class ContactService : public example::ContactServiceRpc
+class ContactService : public example::ContactService
 {
 public:
     void GetContactList(::google::protobuf::RpcController *controller,
@@ -42,7 +42,7 @@ protected:
     {
         LOG(WARNING) << "doing local service: GetFriendsList";
         // 调用别的微服务
-        example::UserServiceRpc_Stub stub(new meha::RpcChannel);
+        example::UserService_Stub stub(new meha::RpcChannel);
         example::HasUserRequest req;
         req.set_uid(uid);
         example::HasUserResponse rsp;
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     RpcConfig::InitEnv(argc, argv);
 
     RpcProvider provider("meha");
-    provider.RegisterService(new ContactService());
+    provider.RegisterService(std::make_unique<ContactService>());
 
     provider.Run();
     return 0;
