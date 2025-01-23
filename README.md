@@ -9,6 +9,14 @@ Linux 环境下基于 muduo、Protobuf 和 Zookeeper 实现的一个轻量级 RP
 - 基于 ZooKeeper 分布式协调服务中间件提供服务注册和服务发现功能。
 - 设计了基于 TCP 传输的二进制协议，解决粘包问题，且能够高效传输服务名、方法名以及参数。
 
+![RPC框架的工作](doc/RPC框架的工作.png)
+
+- 黄色部分：设计rpc方法参数的序列化和反序列化，以及请求调用和响应调用，使用Protobuf
+
+- 绿色部分：
+  - 使用muduo网络库来传输rpc调用请求和调用结果
+  - 使用Zookeeper配置中心来实现服务注册和发现
+
 ## example
 
 ### 介绍
@@ -35,41 +43,7 @@ cd client
 
 ![](example/example.png)
 
-## 库准备
-
-1. Muduo 库
-
-Muduo 是一个基于多线程 Epoll 模式的高效网络库，负责数据流的网络通信。
-安装教程参考：[Mudo安装](https://blog.csdn.net/QIANGWEIYUAN/article/details/89023980)
-
-2. Zookeeper
-Zookeeper 负责服务注册与发现，动态记录服务的 IP 地址及端口号，以便调用端快速找到目标服务。
-
-安装 Zookeeper：
-```shell
-sudo apt install zookeeperd
-```
-安装 Zookeeper 开发库：
-```shell
-sudo apt install libzookeeper-mt-dev
-```
-
-3. Protobuf
-Protobuf 负责 RPC 方法的注册、数据的序列化与反序列化。
-
-```shell
-sudo apt-get install protobuf-compiler libprotobuf-dev
-```
-
-4. Glog 日志库的安装
-
-一个简单高效的异步日志库，用于记录框架运行时的调试与错误日志。
-
-```shell
-sudo apt-get install libgoogle-glog-dev libgflags-dev
-```
-
-## 整体的框架
+## 主要技术点
 
 - **muduo库**：负责数据流的网络通信，采用了多线程epoll模式的IO多路复用，让服务发布端接受服务调用端的连接请求，并由绑定的回调函数处理调用端的函数调用请求。
 

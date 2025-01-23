@@ -29,8 +29,8 @@ void test_client_call_service()
 void test_service_call_another_service()
 {
     LOG(WARNING) << "========= " << __PRETTY_FUNCTION__ << " =========";
-
-    example::UserService_Stub user_stub(new RpcChannel, ::google::protobuf::Service::ChannelOwnership::STUB_OWNS_CHANNEL);
+    auto* channel = new RpcChannel();
+    example::UserService_Stub user_stub(channel);
 
     example::LoginRequest req;
     req.set_name("zhangsan");
@@ -42,7 +42,7 @@ void test_service_call_another_service()
         exit(EXIT_FAILURE);
     }
 
-    example::ContactService_Stub contact_stub(new RpcChannel, ::google::protobuf::Service::ChannelOwnership::STUB_OWNS_CHANNEL);
+    example::ContactService_Stub contact_stub(channel);
 
     example::GetContactListRequest req2;
     req2.set_uid(rsp.uid());
@@ -58,17 +58,16 @@ void test_service_call_another_service()
         exit(EXIT_SUCCESS);
     }
 
-    LOG(INFO) << "user "
-              << "zhangsan"
-              << "'s contacts:";
+    LOG(INFO) << "user zhangsan 's contacts:";
     for (auto &contact : rsp2.contacts()) {
         LOG(INFO) << "contact :" << contact;
     }
+    delete channel;
 }
 
 int main(int argc, char **argv)
 {
-    RpcConfig::InitEnv(argc, argv);
+    RpcConfig::ParseCmd(argc, argv);
     test_client_call_service();
     test_service_call_another_service();
     return 0;

@@ -6,9 +6,14 @@
 #include "user.pb.h"
 #include "echo.pb.h"
 
+/**
+ * @brief 本地服务的远程版本
+ * @details 内部调用本地服务的本地版本来实现业务功能，序列化和调用到对端实现是基于Protobuf提供的基本RPC框架实现
+ */
 class UserService : public example::UserService
 {
-public: // RPC远端方法回调
+public:
+    // Login的远程方法
     void Login(::google::protobuf::RpcController *controller
     , const ::example::LoginRequest *request
     , ::example::LoginResponse *response
@@ -18,7 +23,7 @@ public: // RPC远端方法回调
         std::string name = request->name();
         std::string passwd = request->passwd();
 
-        // 做本地业务
+        // 做本地业务（利用本地方法来达到代码复用）
         bool ok = Login(name, passwd);
 
         // 写回响应（错误码，错误消息，返回值）
@@ -33,7 +38,7 @@ public: // RPC远端方法回调
             response->set_uid(-1);
         }
 
-        // 执行回调操作（response对象数据的序列化和网络发送（都是由框架完成））
+        // 执行回调操作（就是之前RpcProvider设置的sendRpcResponse，完成对象数据的序列化和网络发送）
         done->Run();
     }
     void Logout(::google::protobuf::RpcController *controller
@@ -50,7 +55,7 @@ public: // RPC远端方法回调
             response->set_uid(uid);
         } else {
             code->set_errcode(1);
-            code->set_errmsg("Login Failed");
+            code->set_errmsg("Logout Failed");
             response->set_uid(-1);
         }
         done->Run();
@@ -76,7 +81,8 @@ public: // RPC远端方法回调
         done->Run();
     }
 
-protected: // RPC方法对应的本地业务方法
+protected:
+    // Login的本地方法
     bool Login(std::string name, std::string passwd)
     {
         LOG(INFO) << "doing local service: Login";
@@ -145,7 +151,7 @@ int main(int argc, char **argv)
 {
     using namespace meha;
     // 调用框架的初始化操作
-    RpcConfig::InitEnv(argc, argv);
+    RpcConfig::ParseCmd(argc, argv);
 
     // provider是一个rpc网络服务对象。把UserService和EchoService对象都发布到rpc节点127.0.0.1:8000上
     RpcProvider provider("meha");

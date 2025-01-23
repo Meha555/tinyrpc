@@ -1,0 +1,24 @@
+@startuml 服务注册流程
+autonumber
+autoactivate on
+
+participant EchoService
+participant RpcProvider
+participant ZooKeeper
+
+EchoService -> RpcProvider: 注册服务对象
+RpcProvider -> RpcProvider: 维护服务名和服务对象\n的本地注册表
+return
+RpcProvider -> ZooKeeper : 连接到zookeeper
+return zkhandle
+RpcProvider -> ZooKeeper : 注册"/服务名/方法名"节点
+note right
+  维护服务名和服务所在节点地址
+  的分布式注册表
+end note
+return
+RpcProvider -> RpcProvider : 持续监听来自客户端的请求
+return
+return
+
+@enduml

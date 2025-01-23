@@ -14,8 +14,8 @@ void RpcChannel::CallMethod(const ::google::protobuf::MethodDescriptor *method,
                             ::google::protobuf::Message *response,
                             ::google::protobuf::Closure *done)
 {
-    // 如果没有和服务提供者连接过，说明还不知道服务提供者的ip:port
-    if (-1 == m_clientfd) {
+    // 如果没有和服务提供者连接过，说明还不知道服务提供者的ip:port，此时要到zk中查一下，然后连接到对应的服务节点
+    // if (-1 == m_clientfd) { // 这个-1 == m_clientfd去掉的原因是，我希望多个Stub公用一个RpcChannel，而这些Stub对应的服务可能不在同一个节点上
         // 获取服务对象和方法名
         const google::protobuf::ServiceDescriptor *sd = method->service();
         m_service_name = sd->name();
@@ -31,17 +31,16 @@ void RpcChannel::CallMethod(const ::google::protobuf::MethodDescriptor *method,
         }
         std::tie(m_ip, m_port) = *host_data;
         LOG(INFO) << "RpcProvider data: " << m_ip << ":" << m_port;
-        auto rt = ConnectTo(m_ip, m_port);
-        if (!rt) {
+        if (!ConnectTo(m_ip, m_port)) {
             controller->SetFailed("connect to server error");
             LOG(ERROR) << "connect to server error";
             return;
         } else {
             LOG(INFO) << "connect to server success";
         }
-    }
+    // }
 
-    // 获取参数的序列化字符串长度args_size
+    // 获取参数的序列化结果
     std::string args_str;
     if (!request->SerializeToString(&args_str)) {
         controller->SetFailed("serialize request fail");
@@ -49,13 +48,13 @@ void RpcChannel::CallMethod(const ::google::protobuf::MethodDescriptor *method,
         return;
     }
     // 定义rpc的报文header
-    tinyrpc::RpcHeader krpcheader;
-    krpcheader.set_service_name(m_service_name);
-    krpcheader.set_method_name(m_method_name);
-    krpcheader.set_args_size(args_str.size());
+    tinyrpc::RpcHeader header;
+    header.set_service_name(m_service_name);
+    header.set_method_name(m_method_name);
+    header.set_args_size(args_str.size());
 
     std::string header_str;
-    if (!krpcheader.SerializeToString(&header_str)) {
+    if (!header.SerializeToString(&header_str)) {
         controller->SetFailed("serialize rpc header error!");
         LOG(ERROR) << "serialize rpc header error!";
         return;
@@ -67,7 +66,7 @@ void RpcChannel::CallMethod(const ::google::protobuf::MethodDescriptor *method,
         coded_output.WriteVarint32(static_cast<uint32_t>(header_str.size()));
         coded_output.WriteString(header_str);
     }
-    send_rpc_str += args_str;
+    send_rpc_str += args_str; // RpcHeader + 实参payload
     //  打印调试信息
     // LOG(INFO) << "============================================";
     // LOG(INFO) << "header_size: " << header_str.size();

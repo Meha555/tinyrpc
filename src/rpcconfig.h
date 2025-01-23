@@ -12,7 +12,7 @@ class RpcConfig
 public:
     static RpcConfig &Instance();
     // 解析命令行参数
-    static void InitEnv(int argc, char **argv);
+    static void ParseCmd(int argc, char **argv);
     // 加载配置文件
     void LoadConfigFile(const char *config_file);
     // 查找key对应的value

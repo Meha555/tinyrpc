@@ -42,7 +42,7 @@ protected:
     {
         LOG(WARNING) << "doing local service: GetFriendsList";
         // 调用别的微服务
-        example::UserService_Stub stub(new meha::RpcChannel);
+        example::UserService_Stub stub(new meha::RpcChannel, ::google::protobuf::Service::ChannelOwnership::STUB_OWNS_CHANNEL);
         example::HasUserRequest req;
         req.set_uid(uid);
         example::HasUserResponse rsp;
@@ -60,7 +60,7 @@ protected:
 int main(int argc, char **argv)
 {
     using namespace meha;
-    RpcConfig::InitEnv(argc, argv);
+    RpcConfig::ParseCmd(argc, argv);
 
     RpcProvider provider("meha");
     // provider是一个rpc网络服务对象。把ContactService对象发布到rpc节点127.0.0.1:8001上

@@ -13,7 +13,7 @@ RpcConfig &RpcConfig::Instance()
     return config;
 }
 
-void RpcConfig::InitEnv(int argc, char **argv)
+void RpcConfig::ParseCmd(int argc, char **argv)
 {
     if (argc < 2) {
         std::cerr << "format:" << argv[0] << "-i <configfile>" << std::endl;

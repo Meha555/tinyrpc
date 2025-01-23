@@ -1,4 +1,4 @@
-@startuml RPC调用过程
+@startuml RPC调用流程
 autonumber
 autoactivate on
 
@@ -9,16 +9,17 @@ participant ZooKeeper
 participant RpcProvider
 participant EchoService
 
-User -> EchoService_Stub : Echo(request)
-EchoService_Stub -> RpcChannel : CallMethod(idx, request)
+User -> EchoService_Stub : 创建服务对象的本地Stub\n并调用服务方法Echo(request)
+EchoService_Stub -> RpcChannel : 使用框架的CallMethod(idx, request)\n来发送请求到服务地址
 RpcChannel -> ZooKeeper : 1. 查找服务地址
 return
 RpcChannel -> RpcChannel : 2. 封装RpcHeader
 return
 RpcChannel -> RpcProvider : 3. 发送请求到服务地址
-RpcProvider -> EchoService : 解析RpcHeader，调用其中指定的服务方法
+RpcProvider -> EchoService : 解析RpcHeader
+EchoService -> EchoService : 使用框架的CallMethod来\n本地调用其中指定的服务方法
 return
-return
+return 发送服务调用的响应结果
 return
 return
 
